@@ -6,9 +6,17 @@ frame <- data.frame(rawData)
 
 print(names(frame))
 
-cis <- frame[frame$DRUG_NAME == "Cisplatin", c("CELL_LINE_NAME","DRUG_NAME","LN_IC50")]
+cis <- frame[frame$DRUG_NAME == "Cisplatin", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+cis <- cis[cis$TCGA_DESC != "UNCLASSIFIED", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 
-print(nrow(cis))
+cisTHCA <- cis[cis$TCGA_DESC == "THCA", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+cisLIHC <- cis[cis$TCGA_DESC == "LIHC", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+cisSKCM <- cis[cis$TCGA_DESC == "SKCM", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+
+filteredCis <- rbind(cisTHCA, cisLIHC)
+filteredCis <- rbind(filteredCis, cisSKCM)
+
+print(nrow(filteredCis))
 
 getTop <- function(x){
   return(top_frac(x, 0.2))
@@ -19,8 +27,8 @@ getBottom <- function(x){
 }
 
 
-top <- getTop(cis)
-bottom <- getBottom(cis)
+top <- getTop(filteredCis)
+bottom <- getBottom(filteredCis)
 
 print(top)
 print(bottom)
