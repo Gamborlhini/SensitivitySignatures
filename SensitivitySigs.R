@@ -1,34 +1,42 @@
+#import dplyr for later use
 library(dplyr)
 
+#read GDSC data from csv file
 rawData <- read.csv(file = "data2.csv")
-
+#convert into dataframe
 frame <- data.frame(rawData)
-
+#display all headers
 print(names(frame))
 
+#filter frame to only include cisplatin
 cis <- frame[frame$DRUG_NAME == "Cisplatin", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
-cis <- cis[cis$TCGA_DESC != "UNCLASSIFIED", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 
+#filter frame to only include THCA, LIHC, and SKCM sample types
 cisTHCA <- cis[cis$TCGA_DESC == "THCA", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 cisLIHC <- cis[cis$TCGA_DESC == "LIHC", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 cisSKCM <- cis[cis$TCGA_DESC == "SKCM", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 
+#reassemble the dataframe
 filteredCis <- rbind(cisTHCA, cisLIHC)
 filteredCis <- rbind(filteredCis, cisSKCM)
 
+#display the number of cell lines in the filtered frame
 print(nrow(filteredCis))
 
+#takes a dataframe and returns the top 20% based on the last column values (LN_IC50)
 getTop <- function(x){
   return(top_frac(x, 0.2))
 }
 
+#takes a dataframe and returns the bottom 20% based on the last column values (LN_IC50) 
 getBottom <- function(x){
   return(top_frac(x, -0.2))
 }
 
-
+#Creates dataframes for the top and bottom responders
 top <- getTop(filteredCis)
 bottom <- getBottom(filteredCis)
 
+#Displays top and bottom responders
 print(top)
 print(bottom)
