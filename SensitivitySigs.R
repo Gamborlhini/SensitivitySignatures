@@ -1,20 +1,24 @@
 #import dplyr for later use
 library(dplyr)
 
+
 #read GDSC data from csv file
 rawData <- read.csv(file = "data2.csv")
+#expressionData <- read.csv(file = "CellLineBasalExpression.csv")
+#reformat so cell lines are rows and genes are columns
+#expressionData.t <- t(expressionData)
 #convert into dataframe
 frame <- data.frame(rawData)
 #display all headers
 print(names(frame))
 
 #filter frame to only include cisplatin
-cis <- frame[frame$DRUG_NAME == "Cisplatin", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+cis <- frame[frame$DRUG_NAME == "Cisplatin", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 
 #filter frame to only include THCA, LIHC, and SKCM sample types
-cisTHCA <- cis[cis$TCGA_DESC == "THCA", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
-cisLIHC <- cis[cis$TCGA_DESC == "LIHC", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
-cisSKCM <- cis[cis$TCGA_DESC == "SKCM", c("CELL_LINE_NAME", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+cisTHCA <- cis[cis$TCGA_DESC == "THCA", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+cisLIHC <- cis[cis$TCGA_DESC == "LIHC", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+cisSKCM <- cis[cis$TCGA_DESC == "SKCM", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 
 #reassemble the dataframe
 filteredCis <- rbind(cisTHCA, cisLIHC)
@@ -36,7 +40,10 @@ getBottom <- function(x){
 #Creates dataframes for the top and bottom responders
 top <- getTop(filteredCis)
 bottom <- getBottom(filteredCis)
+#set up boolean for sensitivity
+top['sensitivity'] <- TRUE
+bottom['sensitivity'] <- FALSE
 
-#Displays top and bottom responders
-print(top)
-print(bottom)
+allSens <- rbind(top, bottom)
+#Displays top and bottom respondents
+print(allSens)
