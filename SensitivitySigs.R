@@ -1,20 +1,15 @@
 #import dplyr for later use
 library(dplyr)
 
-
 #read GDSC data from csv file
 rawData <- read.csv(file = "data2.csv")
-expressionData0 <- read.csv(file = "CellLineBasalExpression_0.csv")
-expressionData1 <- read.csv(file = "CellLineBasalExpression_1.csv")
-expressionData2 <- read.csv(file = "CellLineBasalExpression_2.csv")
-expressionData3 <- read.csv(file = "CellLineBasalExpression_3.csv")
+expressionData0 <- data.frame(read.csv(file = "out_0.csv", check.names = FALSE))
+expressionData1 <- data.frame(read.csv(file = "out_1.csv", check.names = FALSE))
+expressionData2 <- data.frame(read.csv(file = "out_2.csv", check.names = FALSE))
+expressionData3 <- data.frame(read.csv(file = "out_3.csv", check.names = FALSE))
 combinedEXP <- rbind(expressionData0, expressionData1, expressionData2, expressionData3)
-#reformat so cell lines are rows and genes are columns
-#expressionData.t <- t(expressionData)
-#convert into dataframe
+
 frame <- data.frame(rawData)
-#display all headers
-print(names(frame))
 print(names(combinedEXP))
 
 #filter frame to only include cisplatin
@@ -34,12 +29,12 @@ print(nrow(filteredCis))
 
 #takes a dataframe and returns the top 20% based on the last column values (LN_IC50)
 getTop <- function(x){
-  return(top_frac(x, 0.2))
+  return(top_frac(x, 0.2, LN_IC50))
 }
 
 #takes a dataframe and returns the bottom 20% based on the last column values (LN_IC50) 
 getBottom <- function(x){
-  return(top_frac(x, -0.2))
+  return(top_frac(x, -0.2, LN_IC50))
 }
 
 #Creates dataframes for the top and bottom responders
@@ -50,6 +45,8 @@ top['sensitivity'] <- TRUE
 bottom['sensitivity'] <- FALSE
 
 allSens <- rbind(top, bottom)
-#Displays top and bottom respondents
+#Do the inner join
+matchedSens <- inner_join(allSens, combinedEXP, by = c("COSMIC_ID" = "GENE_SYMBOLS"))
 print(allSens)
-print(expressionData0 %>% slice(1:2))
+
+print(matchedSens)
