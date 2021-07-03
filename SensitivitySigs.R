@@ -1,5 +1,6 @@
 #import dplyr for later use
 library(dplyr)
+library(limma)
 
 #read GDSC data from csv file
 rawData <- read.csv(file = "data2.csv")
@@ -52,6 +53,7 @@ matchedSens <- inner_join(combinedEXP, sensForJoin, by = c("GENE_SYMBOLS" = "COS
 print(allSens)
 
 
+
 #limma stuff from here on out
 #make the design matrix
 design <- model.matrix(~sensitivity, data = matchedSens)
@@ -63,7 +65,7 @@ colSums(design)
 table(matchedSens[, "sensitivity"])
 
 #use limma to do DE
-fit <- lmFit(matchedSens, design)
+fit <- lmFit(t(matchedSens[,-1]), design)
 fit <- eBayes(fit)
 
 #This code is to rotate the dataset later if I need
