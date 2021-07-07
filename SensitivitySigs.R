@@ -64,6 +64,11 @@ print(head(design, 2))
 colSums(design)
 table(matchedSens[, "sensitivity"])
 
+#remove gene symbols column
+matchedSens <- matchedSens[,-1]
+#remove sensitivity column
+matchedSens <- matchedSens[,1:(ncol(matchedSens)-1)]
+
 #use limma to do DE
 fit <- lmFit(t(matchedSens[,-1]), design)
 fit <- eBayes(fit)
