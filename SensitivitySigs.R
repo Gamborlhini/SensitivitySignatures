@@ -19,13 +19,8 @@ frame <- data.frame(rawData)
 cis <- frame[frame$DRUG_NAME == "Cisplatin", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 
 #filter frame to only include THCA, LIHC, and SKCM sample types
-cisTHCA <- cis[cis$TCGA_DESC == "THCA", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
-cisLIHC <- cis[cis$TCGA_DESC == "LIHC", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
-cisSKCM <- cis[cis$TCGA_DESC == "SKCM", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+filteredCis <- cis[cis$TCGA_DESC == "THCA" | cis$TCGA_DESC == "LIHC" | cis$TCGA_DESC == "SKCM", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 
-#reassemble the dataframe
-filteredCis <- rbind(cisTHCA, cisLIHC)
-filteredCis <- rbind(filteredCis, cisSKCM)
 
 #takes a dataframe and returns the top 20% based on the last column values (LN_IC50)
 getTop <- function(x){
@@ -40,17 +35,18 @@ getBottom <- function(x){
 #Creates dataframes for the top and bottom responders
 top <- getTop(filteredCis)
 bottom <- getBottom(filteredCis)
+
 #set up boolean explanatory variable for sensitivity
 top['sensitivity'] <- TRUE
 bottom['sensitivity'] <- FALSE
 
 #recombines the top and bottom 20%
 allSens <- rbind(top, bottom)
+
 #selects only the things we need for limma
 sensForJoin <- allSens[, c("COSMIC_ID", "sensitivity")]
 #Do the inner join
 matchedSens <- inner_join(combinedEXP, sensForJoin, by = c("GENE_SYMBOLS" = "COSMIC_ID"))
-print(allSens)
 
 
 
@@ -58,11 +54,8 @@ print(allSens)
 #make the design matrix
 design <- model.matrix(~sensitivity, data = matchedSens)
 
-#check to see that it looks right
-print(head(design, 2))
-#check the number of samples against the number of samples in the original set
-colSums(design)
-table(matchedSens[, "sensitivity"])
+#rename design variable
+colnames(design) <- c("sens", "sensvsres")
 
 #remove gene symbols column
 matchedSens <- matchedSens[,-1]
@@ -73,8 +66,31 @@ matchedSens <- matchedSens[,1:(ncol(matchedSens)-1)]
 fit <- lmFit(t(matchedSens[,-1]), design)
 fit <- eBayes(fit)
 
-#This code is to rotate the dataset later if I need
+#summarize results
+topTable(fit, number = Inf, lfc=0.2, p.value=0.05, adjust.method="none", coef="sensvsres")
 
-#transposed <- as.data.frame(t(matchedSens[,-1]))
-#colnames(transposed) <- rownames(matchedSens)
-#rownames(transposed) <- colnames(matchedSens)
+#store significantly up/downregulated genes from limma
+limmaSigUp <- fit$t[fit$t[,"sensvsres"] > 1.96,]
+limmaSigDown <- fit$t[fit$t[,"sensvsres"] < -1.96,]
+
+#multtest stuff
+
+#get the equivalent of a design variable for multtest
+exp.cl <- design[,2]
+#get the expression set for multtest
+exp <- t(matchedSens[,-1])
+
+#grab the stats
+resP<-mt.minP(exp,exp.cl)
+
+#store sig up/down regulated genes from multtest
+multSigUp <- resP[resP$teststat > 1.96,]
+multSigDown <- resP[resP$teststat < -1.96,]
+
+#order limma up/down regulated genes
+limmaSigUp <- limmaSigUp[order(-limmaSigUp[,"sensvsres"]),]
+limmaSigDown <- limmaSigDown[order(limmaSigUp[,"sensvsres"]),]
+
+#order multtest up/down regulated genes
+multSigUp <- multSigUp[order(-multSigUp$teststat),]
+multSigDown <- multSigDown[order(multSigUp$teststat),]
