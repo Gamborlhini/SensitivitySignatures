@@ -65,7 +65,7 @@ matchedSens <- matchedSens[,-1]
 matchedSens <- matchedSens[,1:(ncol(matchedSens)-1)]
 
 #use limma to get a linear model
-fit <- lmFit(t(matchedSens[,-1]), design)
+fit <- lmFit(t(matchedSens), design)
 #compute eBayes statistics
 fit <- eBayes(fit)
 
@@ -82,7 +82,7 @@ limmaSigDown <- fit$t[fit$t[,"sensvsres"] < -1.96,]
 exp.cl <- design[,2]
 
 #format the expression set for multtest
-exp <- t(matchedSens[,-1])
+exp <- t(matchedSens)
 
 #compute the statistics with multtest
 resP<-mt.minP(exp,exp.cl)
