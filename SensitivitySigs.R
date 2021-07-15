@@ -64,8 +64,9 @@ matchedSens <- matchedSens[,-1]
 #remove sensitivity column
 matchedSens <- matchedSens[,1:(ncol(matchedSens)-1)]
 
-#use limma to do DE
+#use limma to get a linear model
 fit <- lmFit(t(matchedSens[,-1]), design)
+#compute eBayes statistics
 fit <- eBayes(fit)
 
 #summarize results
@@ -77,12 +78,13 @@ limmaSigDown <- fit$t[fit$t[,"sensvsres"] < -1.96,]
 
 #multtest stuff
 
-#get the equivalent of a design variable for multtest
+#format the equivalent of a design variable for multtest
 exp.cl <- design[,2]
-#get the expression set for multtest
+
+#format the expression set for multtest
 exp <- t(matchedSens[,-1])
 
-#grab the stats
+#compute the statistics with multtest
 resP<-mt.minP(exp,exp.cl)
 
 #store sig up/down regulated genes from multtest
@@ -97,12 +99,16 @@ limmaSigDown <- limmaSigDown[order(limmaSigUp[,"sensvsres"]),]
 multSigUp <- multSigUp[order(-multSigUp$teststat),]
 multSigDown <- multSigDown[order(multSigUp$teststat),]
 
-#samr stuff
+#samr reformatting
 exp.cl <- exp.cl + 1
 exp <- ceiling(exp^2)
 
+#compile samr data into the list format it wants
 samrExp <- list(x=exp, y=exp.cl, geneid=rownames(exp))
+#do the first samr computation
 samrStats <- samr(samrExp, resp.type = "Two class unpaired", assay.type = "seq")
 
+#compute delta table
 delta.table <- samr.compute.delta.table(samrStats)
+#compute siggenes, 1.96 is just an arbitrary delta value
 siggenes.table <- samr.compute.siggenes.table(samrStats, 1.96, samrExp, delta.table)
