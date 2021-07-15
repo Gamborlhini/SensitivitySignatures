@@ -108,7 +108,7 @@ samrExp <- list(x=exp, y=exp.cl, geneid=rownames(exp))
 #do the first samr computation
 samrStats <- samr(samrExp, resp.type = "Two class unpaired", assay.type = "seq")
 
-#compute delta table
-delta.table <- samr.compute.delta.table(samrStats)
-#compute siggenes, 1.96 is just an arbitrary delta value
-siggenes.table <- samr.compute.siggenes.table(samrStats, 1.96, samrExp, delta.table)
+#compute delta table min.foldchange 1.5 is arbitrary
+delta.table <- samr.compute.delta.table(samrStats, min.foldchange = 1.5)
+#compute siggenes, 0.4 is just an arbitrary delta value
+siggenes.table <- samr.compute.siggenes.table(samrStats, 0.4, samrExp, delta.table, min.foldchange = 1.5)
