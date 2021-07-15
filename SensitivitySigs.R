@@ -99,8 +99,10 @@ multSigDown <- multSigDown[order(multSigUp$teststat),]
 
 #samr stuff
 exp.cl <- exp.cl + 1
+exp <- ceiling(exp^2)
 
-samrExp <- list(x=exp, y=exp.cl, geneid=as.character(1:nrow(exp)))
+samrExp <- list(x=exp, y=exp.cl, geneid=rownames(exp))
 samrStats <- samr(samrExp, resp.type = "Two class unpaired", assay.type = "seq")
 
-
+delta.table <- samr.compute.delta.table(samrStats)
+siggenes.table <- samr.compute.siggenes.table(samrStats, 1.96, samrExp, delta.table)
