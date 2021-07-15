@@ -1,6 +1,8 @@
-#import dplyr for later use
+#import dplyr, limma, samr, multtest for later use
 library(dplyr)
 library(limma)
+library(samr)
+library(multtest)
 
 #read GDSC data from csv file
 rawData <- read.csv(file = "data2.csv")
@@ -94,3 +96,11 @@ limmaSigDown <- limmaSigDown[order(limmaSigUp[,"sensvsres"]),]
 #order multtest up/down regulated genes
 multSigUp <- multSigUp[order(-multSigUp$teststat),]
 multSigDown <- multSigDown[order(multSigUp$teststat),]
+
+#samr stuff
+exp.cl <- exp.cl + 1
+
+samrExp <- list(x=exp, y=exp.cl, geneid=as.character(1:nrow(exp)))
+samrStats <- samr(samrExp, resp.type = "Two class unpaired", assay.type = "seq")
+
+
