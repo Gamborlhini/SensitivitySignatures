@@ -99,16 +99,9 @@ limmaSigDown <- limmaSigDown[order(limmaSigUp[,"sensvsres"]),]
 multSigUp <- multSigUp[order(-multSigUp$teststat),]
 multSigDown <- multSigDown[order(multSigUp$teststat),]
 
-#samr reformatting
-exp.cl <- exp.cl + 1
-exp <- ceiling(exp^2)
+#samr
+exp.cl <- exp.cl+1
+samrStats <- SAM(exp, exp.cl, resp.type = "Two class unpaired", testStatistic = "wilcoxon", genenames = rownames(exp))
 
-#compile samr data into the list format it wants
-samrExp <- list(x=exp, y=exp.cl, geneid=rownames(exp))
-#do the first samr computation
-samrStats <- samr(samrExp, resp.type = "Two class unpaired", assay.type = "seq")
-
-#compute delta table min.foldchange 1.5 is arbitrary
-delta.table <- samr.compute.delta.table(samrStats, min.foldchange = 1.5)
-#compute siggenes, 0.4 is just an arbitrary delta value
-siggenes.table <- samr.compute.siggenes.table(samrStats, 0.4, samrExp, delta.table, min.foldchange = 1.5)
+samrSigUp <- samrStats$siggenes.table$genes.up
+samrSigDown <- samrStats$siggenes.table$genes.lo
