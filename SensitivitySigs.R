@@ -93,15 +93,15 @@ multSigDown <- resP[resP$teststat < -1.96,]
 
 #order limma up/down regulated genes
 limmaSigUp <- limmaSigUp[order(-limmaSigUp[,"sensvsres"]),]
-limmaSigDown <- limmaSigDown[order(limmaSigUp[,"sensvsres"]),]
+limmaSigDown <- limmaSigDown[order(limmaSigDown[,"sensvsres"]),]
 
 #order multtest up/down regulated genes
 multSigUp <- multSigUp[order(-multSigUp$teststat),]
-multSigDown <- multSigDown[order(multSigUp$teststat),]
+multSigDown <- multSigDown[order(multSigDown$teststat),]
 
 #samr
 exp.cl <- exp.cl+1
-samrStats <- SAM(exp, exp.cl, resp.type = "Two class unpaired", testStatistic = "wilcoxon", genenames = rownames(exp))
+samrStats <- SAM(exp, exp.cl, resp.type = "Two class unpaired", testStatistic = "wilcoxon", genenames = rownames(exp), fdr.output = 0.50)
 
 samrSigUp <- samrStats$siggenes.table$genes.up
 samrSigDown <- samrStats$siggenes.table$genes.lo
