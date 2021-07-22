@@ -1,5 +1,5 @@
 #import dplyr, limma, samr, multtest for later use
-library(dplyr)
+library(dplyr, mask.ok = T)
 library(limma)
 library(samr)
 library(multtest)
@@ -105,3 +105,12 @@ samrStats <- SAM(exp, exp.cl, resp.type = "Two class unpaired", testStatistic = 
 
 samrSigUp <- samrStats$siggenes.table$genes.up
 samrSigDown <- samrStats$siggenes.table$genes.lo
+
+samrUpNames <- samrSigUp[,"Gene ID"]
+samrDownNames <- samrSigDown[,"Gene ID"]
+
+multUpNames <- rownames(multSigUp)
+multDownNames <- rownames(multSigDown)
+
+limmaUpNames <- rownames(limmaSigUp)
+limmaDownNames <- rownames(limmaSigDown)
