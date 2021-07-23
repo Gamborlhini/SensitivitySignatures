@@ -73,8 +73,8 @@ fit <- eBayes(fit)
 topTable(fit, number = Inf, lfc=0.2, p.value=0.05, adjust.method="none", coef="sensvsres")
 
 #store significantly up/downregulated genes from limma
-limmaSigUp <- fit$t[fit$t[,"sensvsres"] > 1.96,]
-limmaSigDown <- fit$t[fit$t[,"sensvsres"] < -1.96,]
+limmaSigUp <- fit$p.value[fit$p.value[,"sensvsres"] < 0.05 & fit$t[,"sensvsres"] > 1.96,]
+limmaSigDown <- fit$p.value[fit$p.value[,"sensvsres"] < 0.05 & fit$t[,"sensvsres"] < -1.96,]
 
 #multtest stuff
 
@@ -88,8 +88,8 @@ exp <- t(matchedSens)
 resP<-mt.minP(exp,exp.cl)
 
 #store sig up/down regulated genes from multtest
-multSigUp <- resP[resP$teststat > 1.96,]
-multSigDown <- resP[resP$teststat < -1.96,]
+multSigUp <- resP[resP$rawp < 0.05 & resP$teststat > 1.96,]
+multSigDown <- resP[resP$rawp < 0.05 & resP$teststat < -1.96,]
 
 #order limma up/down regulated genes
 limmaSigUp <- limmaSigUp[order(-limmaSigUp[,"sensvsres"]),]
@@ -101,7 +101,8 @@ multSigDown <- multSigDown[order(multSigDown$teststat),]
 
 #samr
 exp.cl <- exp.cl+1
-samrStats <- SAM(exp, exp.cl, resp.type = "Two class unpaired", testStatistic = "wilcoxon", genenames = rownames(exp), fdr.output = 0.50)
+exp <- round(exp^2)
+samrStats <- SAMseq(exp, exp.cl, resp.type = "Two class unpaired", genenames = rownames(exp), fdr.output = 0.05)
 
 samrSigUp <- samrStats$siggenes.table$genes.up
 samrSigDown <- samrStats$siggenes.table$genes.lo
