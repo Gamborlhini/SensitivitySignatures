@@ -73,8 +73,8 @@ fit <- eBayes(fit)
 topTable(fit, number = Inf, lfc=0.2, p.value=0.05, adjust.method="none", coef="sensvsres")
 
 #store significantly up/downregulated genes from limma
-limmaSigUp <- fit$p.value[fit$p.value[,"sensvsres"] < 0.05 & fit$t[,"sensvsres"] > 1.96,]
-limmaSigDown <- fit$p.value[fit$p.value[,"sensvsres"] < 0.05 & fit$t[,"sensvsres"] < -1.96,]
+limmaSigUp <- fit$t[fit$p.value[,"sensvsres"] < 0.005 & fit$t[,"sensvsres"] > 1.96,]
+limmaSigDown <- fit$t[fit$p.value[,"sensvsres"] < 0.005 & fit$t[,"sensvsres"] < -1.96,]
 
 #multtest stuff
 
@@ -88,8 +88,8 @@ exp <- t(matchedSens)
 resP<-mt.minP(exp,exp.cl)
 
 #store sig up/down regulated genes from multtest
-multSigUp <- resP[resP$rawp < 0.05 & resP$teststat > 1.96,]
-multSigDown <- resP[resP$rawp < 0.05 & resP$teststat < -1.96,]
+multSigUp <- resP[resP$rawp < 0.005 & resP$teststat > 1.96,]
+multSigDown <- resP[resP$rawp < 0.005 & resP$teststat < -1.96,]
 
 #order limma up/down regulated genes
 limmaSigUp <- limmaSigUp[order(-limmaSigUp[,"sensvsres"]),]
@@ -100,18 +100,42 @@ multSigUp <- multSigUp[order(-multSigUp$teststat),]
 multSigDown <- multSigDown[order(multSigDown$teststat),]
 
 #samr
+#make into 1,2 instead of 0,1
 exp.cl <- exp.cl+1
-exp <- round(exp^2)
-samrStats <- SAMseq(exp, exp.cl, resp.type = "Two class unpaired", genenames = rownames(exp), fdr.output = 0.05)
+#get rid of the names in the vector, they sometimes cause problems
+exp.cl <- unname(exp.cl)
+#calculate the statistics
+samrStats <- SAM(exp, exp.cl, resp.type = "Two class unpaired", genenames = rownames(exp), nperms = 1000, fdr.output = 0.05)
+#extract p values for each gene
+samrPValues <- samr.pvalues.from.perms(samrStats$samr.obj$tt, samrStats$samr.obj$ttstar)
+#take all the genes where p < .005
+samrSigGenes <- samrPValues[which(samrPValues < 0.005)]
 
-samrSigUp <- samrStats$siggenes.table$genes.up
-samrSigDown <- samrStats$siggenes.table$genes.lo
+#take all genes which were upregulated
+samrFullUp <- names(samrStats$samr.obj$tt[samrStats$samr.obj$tt > 0])
+#intersect with those which were significant
+samrSigUp <- samrSigGenes[names(samrSigGenes) %in% samrFullUp]
+#take all genes which were downregulated
+samrFullDown <- names(samrStats$samr.obj$tt[samrStats$samr.obj$tt < 0])
+#intersect with those which were significant
+samrSigDown <- samrSigGenes[names(samrSigGenes) %in% samrFullDown]
 
-samrUpNames <- samrSigUp[,"Gene ID"]
-samrDownNames <- samrSigDown[,"Gene ID"]
+#only the names
+samrUpNames <- names(samrSigUp)
+samrDownNames <- names(samrSigDown)
 
+#only the names
 multUpNames <- rownames(multSigUp)
 multDownNames <- rownames(multSigDown)
 
+#only the names
 limmaUpNames <- rownames(limmaSigUp)
 limmaDownNames <- rownames(limmaSigDown)
+
+#take the intersection of all of the upregulated names
+seedGenesUp <- samrUpNames[samrUpNames %in% multUpNames]
+seedGenesUp <- seedGenesUp[seedGenesUp %in% limmaUpNames]
+
+#take the intersection of all the downregulated names
+seedGenesDown <- samrDownNames[samrDownNames %in% multDownNames]
+seedGenesDown <- seedGenesDown[seedGenesDown %in% limmaDownNames]
