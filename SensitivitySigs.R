@@ -21,7 +21,8 @@ frame <- data.frame(rawData)
 cis <- frame[frame$DRUG_NAME == "Cisplatin", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 
 #filter frame to only include THCA, LIHC, and SKCM sample types
-filteredCis <- cis[cis$TCGA_DESC == "THCA" | cis$TCGA_DESC == "LIHC" | cis$TCGA_DESC == "SKCM", c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
+cancerTypes <- c("THCA", "LIHC", "UCEC", "STAD", "PRAD", "PAAD", "OV", "LUSC", "LUAD", "LGG", "KIRP", "KIRC", "HNSC", "COAD", "CESC", "BLCA")
+filteredCis <- cis[cis$TCGA_DESC %in% cancerTypes, c("CELL_LINE_NAME", "COSMIC_ID", "TCGA_DESC", "DRUG_NAME","LN_IC50")]
 
 
 #takes a dataframe and returns the top 20% based on the last column values (LN_IC50)
@@ -73,8 +74,8 @@ fit <- eBayes(fit)
 topTable(fit, number = Inf, lfc=0.2, p.value=0.05, adjust.method="none", coef="sensvsres")
 
 #store significantly up/downregulated genes from limma
-limmaSigUp <- fit$t[fit$p.value[,"sensvsres"] < 0.005 & fit$t[,"sensvsres"] > 1.96,]
-limmaSigDown <- fit$t[fit$p.value[,"sensvsres"] < 0.005 & fit$t[,"sensvsres"] < -1.96,]
+limmaSigUp <- fit$p.value[fit$p.value[,"sensvsres"] < 0.005 & fit$t[,"sensvsres"] > 1.96,]
+limmaSigDown <- fit$p.value[fit$p.value[,"sensvsres"] < 0.005 & fit$t[,"sensvsres"] < -1.96,]
 
 #multtest stuff
 
@@ -139,3 +140,23 @@ seedGenesUp <- seedGenesUp[seedGenesUp %in% limmaUpNames]
 #take the intersection of all the downregulated names
 seedGenesDown <- samrDownNames[samrDownNames %in% multDownNames]
 seedGenesDown <- seedGenesDown[seedGenesDown %in% limmaDownNames]
+
+save(seedGenesDown, seedGenesUp, file = "~/github/sensitivitysignatures/seeds.rdata")
+
+allExpression <- readRDS("C:/Users/Nikhil Subhas/OneDrive - Hawken School/10th_Grade/SciRes2/SensitivitySignatures/tcga_cleaned_nobrca.rds")
+sprCor <- cor(allExpression[c(-1,-2)], method = "spearman")
+save(sprCor, file = "C:/Users/Nikhil Subhas/Desktop/correlationData.rdata")
+
+
+diag(sprCor) <- NA
+seedRows <- sprCor[rownames(sprCor) %in% seedGenesUp,]
+seedFlat <- as.vector(seedRows)
+seedCutoff <- quantile(seedFlat, probs = 0.85, na.rm=T)
+
+seedNumeric <- apply(seedRows, 1:2, function(x) as.numeric(x > seedCutoff))
+
+cxprsnAvgs <- apply(seedNumeric, 2, mean, na.rm = T)
+
+top15cxprsnAvgs <- names(cxprsnAvgs)[which(cxprsnAvgs > quantile(cxprsnAvgs, probs = 0.85, na.rm=T))]
+seedscxprsn <- top15cxprsnAvgs[top15cxprsnAvgs %in% seedGenesUp]
+
