@@ -74,8 +74,8 @@ fit <- eBayes(fit)
 topTable(fit, number = Inf, lfc=0.2, p.value=0.05, adjust.method="none", coef="sensvsres")
 
 #store significantly up/downregulated genes from limma
-limmaSigUp <- fit$p.value[fit$p.value[,"sensvsres"] < 0.005 & fit$t[,"sensvsres"] > 1.96,]
-limmaSigDown <- fit$p.value[fit$p.value[,"sensvsres"] < 0.005 & fit$t[,"sensvsres"] < -1.96,]
+limmaSigUp <- fit$p.value[fit$p.value[,"sensvsres"] < 0.05 & fit$t[,"sensvsres"] > 1.96,]
+limmaSigDown <- fit$p.value[fit$p.value[,"sensvsres"] < 0.05 & fit$t[,"sensvsres"] < -1.96,]
 
 #multtest stuff
 
@@ -89,8 +89,8 @@ exp <- t(matchedSens)
 resP<-mt.minP(exp,exp.cl)
 
 #store sig up/down regulated genes from multtest
-multSigUp <- resP[resP$rawp < 0.005 & resP$teststat > 1.96,]
-multSigDown <- resP[resP$rawp < 0.005 & resP$teststat < -1.96,]
+multSigUp <- resP[resP$rawp < 0.05 & resP$teststat > 1.96,]
+multSigDown <- resP[resP$rawp < 0.05 & resP$teststat < -1.96,]
 
 #order limma up/down regulated genes
 limmaSigUp <- limmaSigUp[order(-limmaSigUp[,"sensvsres"]),]
@@ -110,7 +110,7 @@ samrStats <- SAM(exp, exp.cl, resp.type = "Two class unpaired", genenames = rown
 #extract p values for each gene
 samrPValues <- samr.pvalues.from.perms(samrStats$samr.obj$tt, samrStats$samr.obj$ttstar)
 #take all the genes where p < .005
-samrSigGenes <- samrPValues[which(samrPValues < 0.005)]
+samrSigGenes <- samrPValues[which(samrPValues < 0.05)]
 
 #take all genes which were upregulated
 samrFullUp <- names(samrStats$samr.obj$tt[samrStats$samr.obj$tt > 0])
@@ -141,12 +141,14 @@ seedGenesUp <- seedGenesUp[seedGenesUp %in% limmaUpNames]
 seedGenesDown <- samrDownNames[samrDownNames %in% multDownNames]
 seedGenesDown <- seedGenesDown[seedGenesDown %in% limmaDownNames]
 
-save(seedGenesDown, seedGenesUp, file = "~/github/sensitivitysignatures/seeds.rdata")
+save(seedGenesDown, seedGenesUp, file = "~/github/sensitivitysignatures/seeds05p.rdata")
 
 allExpression <- readRDS("C:/Users/Nikhil Subhas/OneDrive - Hawken School/10th_Grade/SciRes2/SensitivitySignatures/tcga_cleaned_nobrca.rds")
 sprCor <- cor(allExpression[c(-1,-2)], method = "spearman")
 save(sprCor, file = "C:/Users/Nikhil Subhas/Desktop/correlationData.rdata")
 
+load("C:/Users/23subnik/OneDrive - Hawken School/10th_Grade/SciRes2/SensitivitySignatures/correlationData.rdata")
+load("~/github/sensitivitysignatures/seeds05p.rdata")
 
 diag(sprCor) <- NA
 seedRows <- sprCor[rownames(sprCor) %in% seedGenesUp,]
@@ -160,3 +162,4 @@ cxprsnAvgs <- apply(seedNumeric, 2, mean, na.rm = T)
 top15cxprsnAvgs <- names(cxprsnAvgs)[which(cxprsnAvgs > quantile(cxprsnAvgs, probs = 0.85, na.rm=T))]
 seedscxprsn <- top15cxprsnAvgs[top15cxprsnAvgs %in% seedGenesUp]
 
+save(seedscxprsn, file = "~/github/sensitivitysignatures/cisplatinSigw0-05p.rdata")
