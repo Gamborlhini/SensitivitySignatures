@@ -9,7 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 library(pheatmap)
-signature <- read.csv("cisplatinsignature.csv")[[2]]
+signature <- read.csv("cisplatinsignature0-05p.csv")[[2]]
 load("sensitive.rdata")
 load("resistant.rdata")
 
