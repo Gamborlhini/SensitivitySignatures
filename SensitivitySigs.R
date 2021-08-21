@@ -39,6 +39,9 @@ getBottom <- function(x){
 top <- getTop(filteredCis)
 bottom <- getBottom(filteredCis)
 
+save(top, file = "~/github/sensitivitysignatures/sensitive.rdata")
+save(bottom, file = "~/github/sensitivitysignatures/resistant.rdata")
+
 #set up boolean explanatory variable for sensitivity
 top['sensitivity'] <- TRUE
 bottom['sensitivity'] <- FALSE
@@ -148,7 +151,8 @@ save(seedGenesDown, seedGenesUp, file = "~/github/sensitivitysignatures/seeds.rd
 #sprCor <- cor(allExpression[c(-1,-2)], method = "spearman")
 #save(sprCor, file = "C:/Users/Nikhil Subhas/Desktop/correlationData.rdata")
 
-load("C:/Users/Nikhil Subhas/Desktop/correlationData.rdata")
+load("C:/Users/Nikhil Subhas/OneDrive - Hawken School/10th_Grade/SciRes2/SensitivitySignatures/correlationData.rdata")
+load("~/github/sensitivitysignatures/seeds.rdata")
 
 diag(sprCor) <- NA
 seedRows <- sprCor[rownames(sprCor) %in% seedGenesUp,]
@@ -162,4 +166,5 @@ cxprsnAvgs <- apply(seedNumeric, 2, mean, na.rm = T)
 top15cxprsnAvgs <- names(cxprsnAvgs)[which(cxprsnAvgs > quantile(cxprsnAvgs, probs = 0.85, na.rm=T))]
 seedscxprsn <- top15cxprsnAvgs[top15cxprsnAvgs %in% seedGenesUp]
 
+write.csv(seedscxprsn, file = "~/github/sensitivitysignatures/cisplatinSignature.csv")
 
