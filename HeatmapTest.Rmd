@@ -9,7 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 library(pheatmap)
-signature <- read.csv("cisplatinsignature0-05p.csv")[[2]]
+signature <- read.csv("cisplatinsignature0-05p97cxprsn.csv")[[2]]
 load("sensitive.rdata")
 load("resistant.rdata")
 
@@ -29,8 +29,8 @@ sensitiveExp <- combinedEXP[rownames(combinedEXP) %in% sensitiveTest, names(comb
 resistantExp <- combinedEXP[rownames(combinedEXP) %in% resistantTest, names(combinedEXP) %in% signature]
 
 
-pheatmap(resistantExp, cluster_rows = F, cluster_cols = F)
-pheatmap(sensitiveExp, cluster_rows = F, cluster_cols = F)
+pheatmap(resistantExp, cluster_rows = F, cluster_cols = F, main = "Resistant Expression")
+pheatmap(sensitiveExp, cluster_rows = F, cluster_cols = F, main = "Sensitive Expression")
 
 ```
 
