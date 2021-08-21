@@ -26,9 +26,8 @@ combinedEXP <- combinedEXP[!duplicated(combinedEXP$GENE_SYMBOLS),]
 rownames(combinedEXP) <- combinedEXP$GENE_SYMBOLS
 
 sensitiveExp <- combinedEXP[rownames(combinedEXP) %in% sensitiveTest, names(combinedEXP) %in% signature]
-sensitiveExp <- log2(sensitiveExp)
 resistantExp <- combinedEXP[rownames(combinedEXP) %in% resistantTest, names(combinedEXP) %in% signature]
-resistantExp <- log2(resistantExp)
+
 
 pheatmap(resistantExp, cluster_rows = F, cluster_cols = F)
 pheatmap(sensitiveExp, cluster_rows = F, cluster_cols = F)
