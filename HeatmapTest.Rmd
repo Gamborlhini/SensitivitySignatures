@@ -1,0 +1,37 @@
+---
+title: "HeatmapSensitivityTest"
+author: "Nikhil Subhas"
+date: "8/10/2021"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+library(pheatmap)
+signature <- read.csv("cisplatinsignature.csv")[[2]]
+load("sensitive.rdata")
+load("resistant.rdata")
+
+sensitiveTest <- as.character(sample(top$COSMIC_ID, size = 10))
+resistantTest <- as.character(sample(bottom$COSMIC_ID, size = 10))
+
+expressionData0 <- data.frame(read.csv(file = "out_0.csv", check.names = FALSE))
+expressionData1 <- data.frame(read.csv(file = "out_1.csv", check.names = FALSE))
+expressionData2 <- data.frame(read.csv(file = "out_2.csv", check.names = FALSE))
+expressionData3 <- data.frame(read.csv(file = "out_3.csv", check.names = FALSE))
+#combine all the expression data into one frame
+combinedEXP <- rbind(expressionData0, expressionData1, expressionData2, expressionData3)
+combinedEXP <- combinedEXP[!duplicated(combinedEXP$GENE_SYMBOLS),]
+rownames(combinedEXP) <- combinedEXP$GENE_SYMBOLS
+
+sensitiveExp <- combinedEXP[rownames(combinedEXP) %in% sensitiveTest, names(combinedEXP) %in% signature]
+sensitiveExp <- log2(sensitiveExp)
+resistantExp <- combinedEXP[rownames(combinedEXP) %in% resistantTest, names(combinedEXP) %in% signature]
+resistantExp <- log2(resistantExp)
+
+pheatmap(resistantExp, cluster_rows = F, cluster_cols = F)
+pheatmap(sensitiveExp, cluster_rows = F, cluster_cols = F)
+
+```
+
