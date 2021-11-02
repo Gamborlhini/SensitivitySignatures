@@ -27,17 +27,20 @@ filteredCis <- cis[cis$TCGA_DESC %in% cancerTypes, c("CELL_LINE_NAME", "COSMIC_I
 
 #takes a dataframe and returns the top 20% based on the last column values (LN_IC50)
 getTop <- function(x){
-  return(top_frac(x, 0.2, LN_IC50))
+  return(top_frac(x, 0.1, LN_IC50))
 }
 
-#takes a dataframe and returns the bottom 20% based on the last column values (LN_IC50) 
+#takes a dataframe and returns the bottom 20% based on the last column values (LN_IC50)
 getBottom <- function(x){
-  return(top_frac(x, -0.2, LN_IC50))
+  return(top_frac(x, -0.1, LN_IC50))
 }
 
 #Creates dataframes for the top and bottom responders
 top <- getTop(filteredCis)
 bottom <- getBottom(filteredCis)
+
+save(top, file = "~/github/sensitivitysignatures/sensitive.rdata")
+save(bottom, file = "~/github/sensitivitysignatures/resistant.rdata")
 
 #set up boolean explanatory variable for sensitivity
 top['sensitivity'] <- TRUE
@@ -143,23 +146,24 @@ seedGenesDown <- seedGenesDown[seedGenesDown %in% limmaDownNames]
 
 save(seedGenesDown, seedGenesUp, file = "~/github/sensitivitysignatures/seeds05p.rdata")
 
-allExpression <- readRDS("C:/Users/Nikhil Subhas/OneDrive - Hawken School/10th_Grade/SciRes2/SensitivitySignatures/tcga_cleaned_nobrca.rds")
-sprCor <- cor(allExpression[c(-1,-2)], method = "spearman")
-save(sprCor, file = "C:/Users/Nikhil Subhas/Desktop/correlationData.rdata")
+# Uncomment these lines if you want to run the correlation yourself, it can take up to 14GB of RAM in my experience
+#allExpression <- readRDS("C:/Users/Nikhil Subhas/OneDrive - Hawken School/10th_Grade/SciRes2/SensitivitySignatures/tcga_cleaned_nobrca.rds")
+#sprCor <- cor(allExpression[c(-1,-2)], method = "spearman")
+#save(sprCor, file = "C:/Users/Nikhil Subhas/Desktop/correlationData.rdata")
 
 load("C:/Users/23subnik/OneDrive - Hawken School/10th_Grade/SciRes2/SensitivitySignatures/correlationData.rdata")
-load("~/github/sensitivitysignatures/seeds05p.rdata")
 
 diag(sprCor) <- NA
 seedRows <- sprCor[rownames(sprCor) %in% seedGenesUp,]
 seedFlat <- as.vector(seedRows)
-seedCutoff <- quantile(seedFlat, probs = 0.85, na.rm=T)
+seedCutoff <- quantile(seedFlat, probs = 0.75, na.rm=T)
 
 seedNumeric <- apply(seedRows, 1:2, function(x) as.numeric(x > seedCutoff))
 
 cxprsnAvgs <- apply(seedNumeric, 2, mean, na.rm = T)
 
-top15cxprsnAvgs <- names(cxprsnAvgs)[which(cxprsnAvgs > quantile(cxprsnAvgs, probs = 0.85, na.rm=T))]
+top15cxprsnAvgs <- names(cxprsnAvgs)[which(cxprsnAvgs > quantile(cxprsnAvgs, probs = 0.97, na.rm=T))]
 seedscxprsn <- top15cxprsnAvgs[top15cxprsnAvgs %in% seedGenesUp]
 
-save(seedscxprsn, file = "~/github/sensitivitysignatures/cisplatinSigw0-05p.rdata")
+
+write.csv(seedscxprsn, file = "~/github/sensitivitysignatures/cisplatinSignature0-05p97cxprsn.csv")
